@@ -1,9 +1,10 @@
-@extends('layouts.app')
-@section('content')
-    <div class="row">
-        <h2><a class="btn btn-light" href="{{ route('paintings.index') }}"><i class="fas fa-arrow-left"></i></a> {{ $painting->name }}</h2>
-    </div>
+@extends('paintings.single')
 
+@section('painting-title')
+    {{ $painting->name }}
+@endsection
+
+@section('painting-content')
     <div class="row">
         <div class="col-12 col-md-6">
             <p>

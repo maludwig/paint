@@ -1,23 +1,20 @@
-window._ = require('lodash');
+import jQuery from 'jquery';
+// export for others scripts to use
+window.$ = jQuery;
+window.jQuery = jQuery;
 
-/**
- * We'll load jQuery and the Bootstrap jQuery plugin which provides support
- * for JavaScript based Bootstrap features such as modals and tabs. This
- * code may be modified to fit the specific needs of your application.
- */
-
-try {
-    window.Popper = require('popper.js').default;
-    window.$ = window.jQuery = require('jquery');
-
-    require('bootstrap');
-} catch (e) {}
+import 'bootstrap';
+import _ from 'lodash';
+import Popper from "popper.js";
+import moment from 'moment';
+window.moment = moment
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
  * to our Laravel back-end. This library automatically handles sending the
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
+
 
 window.axios = require('axios');
 

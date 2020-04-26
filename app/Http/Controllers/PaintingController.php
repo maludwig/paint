@@ -16,7 +16,8 @@ class PaintingController extends Controller
      */
     public function index()
     {
-        $paintings = Painting::latest()->paginate(20);
+        $user = Auth::user();
+        $paintings = $user->paintings()->latest()->paginate(20);
         return view('paintings.index', compact('paintings'))
             ->with('i', (request()->input('page', 1) -1) * 5);
     }

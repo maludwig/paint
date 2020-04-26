@@ -21,4 +21,4 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::resource('paintings','PaintingController');
+Route::resource('paintings','PaintingController')->middleware('auth');;

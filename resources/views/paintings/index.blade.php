@@ -54,14 +54,6 @@
                 </tr>
             @endforeach
         </table>
-        <script>
-            $("#painting-list .created-timestamp").each(function (idx) {
-                const timestamp = $(this).data("createdAt") + "Z";
-                const createdAt = moment(timestamp);
-                $(this).text(createdAt.fromNow());
-                $(this).attr('title', createdAt.format());
-            })
-        </script>
     @endif
 
     {!! $paintings->links() !!}

@@ -1,13 +1,10 @@
-@extends('layouts.app')
+@extends('paintings.single')
 
-@section('content')
-    <div class="row">
-        <div class="col-lg-12 margin-tb">
-            <h2>New Painting</h2>
-            <a class="btn btn-primary" href="{{ route('paintings.index') }}"> Back</a>
-        </div>
-    </div>
+@section('painting-title')
+New Painting
+@endsection
 
+@section('painting-content')
     @if ($errors->any())
         <div class="alert alert-danger">
             <strong>Whoops!</strong> There were some problems with your input.<br><br>

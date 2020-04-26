@@ -1,10 +1,10 @@
-@extends('layouts.app')
+@extends('paintings.single')
 
-@section('content')
-    <div class="row">
-        <h2><a class="btn btn-light" href="{{ route('paintings.index') }}"><i class="fas fa-arrow-left"></i></a> Edit Painting</h2>
-    </div>
+@section('painting-title')
+    Edit Painting
+@endsection
 
+@section('painting-content')
     @if ($errors->any())
         <div class="alert alert-danger">
             <strong>Whoops!</strong> There were some problems with your input.<br><br>

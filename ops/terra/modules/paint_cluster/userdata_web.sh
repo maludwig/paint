@@ -85,8 +85,9 @@ function setup_app() {
   setup_php
 
   cd "$APP_DIR"
-  npm install
   composer install
+  npm install
+  npm run dev
 
   # Create python venv
   python3 -m venv "$VENV_DIR"

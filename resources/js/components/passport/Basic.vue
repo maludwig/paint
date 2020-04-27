@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-              <painting-surface v-bind:painting_id="painting.id" />
+                <p>I'm basic</p>
             </div>
         </div>
     </div>
@@ -10,9 +10,8 @@
 
 <script>
     export default {
-        props: ['painting'],
         mounted() {
-            console.log('AppContent mounted.')
+            console.log('Basic mounted.')
         }
     }
 </script>

@@ -1,12 +1,12 @@
 import Vue from 'vue'
-import './bootstrap';
+import './bootstrap'
+import { upperFirst } from 'lodash'
+
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
  * building robust, powerful web applications using Vue and Laravel.
  */
-
-
 
 /**
  * The following block of code may be used to automatically register your
@@ -17,7 +17,14 @@ import './bootstrap';
  */
 
 const files = require.context('./', true, /\.vue$/i)
-files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
+for (const key of files.keys()) {
+  const cut = key.split('/').slice(2).map(dirName => upperFirst(dirName))
+  const baseName = cut.pop().split('.')[0]
+  const elementName = cut.join(' ') + baseName
+  const elementExport = files(key).default
+  console.log('Registering ' + elementName)
+  Vue.component(elementName, elementExport)
+}
 
 // Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 
@@ -27,24 +34,34 @@ files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-let app;
+let app
 
-// $.ready(() => {
+$(function () {
+  if ($('#app').length) {
     app = new Vue({
-        el: '#app',
-        data: {
-            message: 'Hello World'
+      el: '#app',
+      data: {
+        message: 'Hello World',
+        shapes: [
+          { id: 1, name: 'first', shape_data: 'asdf' },
+          { id: 2, name: 'second', shape_data: 'asdfaaa' }
+        ],
+        painting: {
+          id: 1,
+          name: 'boo',
+          description: 'blah'
         }
-    });
-// })
+      }
+    })
+  }
+})
 
-setTimeout( () => {
-    console.log("tick");
-    $("#painting-list .created-timestamp").each(function (idx) {
-        const timestamp = $(this).data("createdAt") + "Z";
-        const createdAt = moment(timestamp);
-        console.log(createdAt.fromNow())
-        $(this).text(createdAt.fromNow());
-        $(this).attr('title', createdAt.format());
-    },1000)
-});
+setTimeout(() => {
+  $('#painting-list .created-timestamp').each(function (idx) {
+    const timestamp = $(this).data('createdAt') + 'Z'
+    const createdAt = moment(timestamp)
+    console.log(createdAt.fromNow())
+    $(this).text(createdAt.fromNow())
+    $(this).attr('title', createdAt.format())
+  }, 1000)
+})

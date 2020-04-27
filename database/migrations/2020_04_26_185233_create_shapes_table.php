@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePaintingsTable extends Migration
+class CreateShapesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreatePaintingsTable extends Migration
      */
     public function up()
     {
-        Schema::create('paintings', function (Blueprint $table) {
+        Schema::create('shapes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->string('name');
-            $table->text('description');
+            $table->foreignId('painting_id')->constrained();
+            $table->json('shape_data');
             $table->timestamps(6);
         });
     }
@@ -29,6 +29,6 @@ class CreatePaintingsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('paintings');
+        Schema::dropIfExists('shapes');
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,12 +14,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'WelcomeController@index');
 
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::resource('paintings','PaintingController')->middleware('auth');;
+Route::resource('paintings','PaintingController')->middleware('auth');
+
+Route::get('/paintings/{painting}/shapes', 'PaintingController@shapes')->middleware('auth');
+Route::post('/paintings/{painting}/shapes', 'PaintingController@add_shape')->middleware('auth');

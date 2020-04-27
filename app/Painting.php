@@ -14,4 +14,9 @@ class Painting extends Model
     {
         return $this->belongsTo('App\User');
     }
+
+    public function shapes()
+    {
+        return $this->hasMany('App\Shape');
+    }
 }

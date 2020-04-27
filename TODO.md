@@ -22,3 +22,4 @@ Install Laravel, and configure .env file
 
 1. Fix the homepage
 1. Make the paint window
+1. Fix #painting-list .created-timestamp

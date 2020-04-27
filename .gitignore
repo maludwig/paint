@@ -1,3 +1,4 @@
+.terraform/
 /.idea
 /node_modules
 /public/css
@@ -17,3 +18,7 @@ yarn-error.log
 resources/sass/app.css
 
 resources/sass/app.css.map
+
+*.tfstate
+
+*.backup

@@ -94,7 +94,7 @@ function setup_app() {
   npm install
   composer install
 
-  chown -R apache:apache /opt/mp/paint/
+  chown -R apache:apache "$APP_HOME"
   systemctl restart httpd
 }
 

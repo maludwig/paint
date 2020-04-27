@@ -324,11 +324,11 @@ resource "aws_lb_target_group" "tf_alb_tg" {
 resource "aws_autoscaling_group" "tf_asg" {
   name = "tf-asg"
 
-  max_size = 1
-  min_size = 1
+  max_size = 2
+  min_size = 2
   availability_zones = [ aws_subnet.tf_subnet_a.availability_zone, aws_subnet.tf_subnet_b.availability_zone ]
   default_cooldown = 300
-  desired_capacity = 1
+  desired_capacity = 2
   health_check_grace_period = 300
   health_check_type = "EC2"
   launch_template {
@@ -339,8 +339,6 @@ resource "aws_autoscaling_group" "tf_asg" {
   target_group_arns = [aws_lb_target_group.tf_alb_tg.arn]
   vpc_zone_identifier = [aws_subnet.tf_subnet_a.id, aws_subnet.tf_subnet_b.id]
   termination_policies = ["OldestInstance"]
-//  tags = "${merge(local.common_tags, map("Name","tf-asg"))}"
-
 }
 
 resource "aws_lb" "tf_alb" {

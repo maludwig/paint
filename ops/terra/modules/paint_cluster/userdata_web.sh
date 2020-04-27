@@ -56,10 +56,13 @@ function setup_node() {
 function setup_app() {
   yum update -y
   if ! which git; then
-    yum install git python3 -y
+    yum install git python3 jq -y
   fi
   if ! which python3; then
-    yum install git python3 -y
+    yum install git python3 jq -y
+  fi
+  if ! which jq; then
+    yum install git python3 jq -y
   fi
 
   if ! [[ -d /root/bashrc.extensions ]]; then
@@ -78,7 +81,11 @@ function setup_app() {
   cd "$APP_DIR"
   git pull origin master
 
-  pip3 install ansible
+  # Create python venv
+  python3 -m venv "$VENV_DIR"
+  source "$VENV_DIR/bin/activate"
+  pip install -r "$APP_DIR/ops/requirements.txt"
+  python "$APP_HOME/paint/ops/secrets.py" --template-env
 
   setup_node
   setup_php

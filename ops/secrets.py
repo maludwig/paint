@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import json
 import os
 
@@ -8,14 +8,16 @@ import base64
 
 import botocore
 from botocore.exceptions import ClientError
-from os.path import dirname, join
+from os.path import dirname, join, realpath, isfile
 
 from argparse import ArgumentParser
 from jinja2 import Template
+import requests
 
-TFSTATE_PATH = join(dirname(__file__), 'terra', 'terraform.tfstate')
-ENV_PATH = join(dirname(dirname(__file__)), '.env')
-ENV_TEMPLATE_PATH = join(dirname(dirname(__file__)), '.env.template.j2')
+OPS_DIR = realpath(dirname(__file__))
+TFSTATE_PATH = join(OPS_DIR, 'terra', 'terraform.tfstate')
+ENV_PATH = join(dirname(OPS_DIR), '.env')
+ENV_TEMPLATE_PATH = join(dirname(OPS_DIR), '.env.template.j2')
 
 region_name = "us-west-2"
 
@@ -26,6 +28,9 @@ client = session.client(
     region_name=region_name
 )
 
+print("File: " + __file__)
+print("ENV: " + ENV_PATH)
+
 
 def load_env_app_key():
     with open(ENV_PATH) as env_file:
@@ -33,7 +38,6 @@ def load_env_app_key():
             if line.startswith("APP_KEY"):
                 return line[8:].strip()
     raise Exception("APP_KEY not found in env file")
-
 
 
 def load_local_secrets():
@@ -120,14 +124,40 @@ def get_secret(secret_name):
 
 
 def template_env(sm_secrets):
-    timestamp = arrow.get().format("YYYY-MM-DD_HH-mm-ss")
-    backup_path = ENV_PATH + ".backup-" + timestamp
-    os.rename(ENV_PATH, backup_path)
+    if isfile(ENV_PATH):
+        timestamp = arrow.get().format("YYYY-MM-DD_HH-mm-ss")
+        backup_path = ENV_PATH + ".backup-" + timestamp
+        os.rename(ENV_PATH, backup_path)
     with open(ENV_PATH, 'w') as env_file:
         with open(ENV_TEMPLATE_PATH) as env_template_file:
             template = Template(env_template_file.read())
             env_file_content = template.render(secrets=sm_secrets)
             env_file.write(env_file_content)
+
+
+def is_ec2_instance():
+    if isfile('/etc/system-release'):
+        with open('/etc/system-release') as release_file:
+            release_name = release_file.read()
+            return 'Amazon Linux' in release_name
+    return False
+
+def local_instance_tags():
+    ec2 = boto3.client('ec2', region_name="us-west-2")
+    response = requests.get('http://169.254.169.254/latest/meta-data/instance-id')
+    instance_id = response.text
+    description = ec2.describe_instances()
+    for rgroup in description['Reservations']:
+        for instance in rgroup['Instances']:
+            if instance['InstanceId'] == instance_id:
+                return {entry['Key']: entry['Value'] for entry in instance['Tags']}
+
+
+def local_instance_secret_name():
+    tags = local_instance_tags()
+    idx = tags['Idx']
+    secret_name = f"tf-{idx}-db-secret"
+    return secret_name
 
 
 def main():
@@ -136,9 +166,12 @@ def main():
     parser.add_argument('--show', help="Shows the secrets, from AWS Secret Manager", action="store_true")
     parser.add_argument('--template-env', help="Templates the .env file from the secrets", action="store_true")
     args = parser.parse_args()
-    secret_name, tf_secrets = load_local_secrets()
-    if args.refresh:
-        create_secret(secret_name, tf_secrets)
+    if is_ec2_instance():
+        secret_name = local_instance_secret_name()
+    else:
+        secret_name, tf_secrets = load_local_secrets()
+        if args.refresh:
+            create_secret(secret_name, tf_secrets)
     sm_secrets = get_secret(secret_name)
     if args.show:
         print(sm_secrets)
@@ -148,11 +181,11 @@ def main():
             GRANT USAGE ON *.* TO 'homestead'@'%' REQUIRE NONE
               WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
             CREATE DATABASE IF NOT EXISTS `homestead`;
-            GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES, INDEX, ALTER, SHOW DATABASES, 
-              CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW, 
-              CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER 
+            GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, RELOAD, PROCESS, REFERENCES, INDEX, ALTER, SHOW DATABASES,
+              CREATE TEMPORARY TABLES, LOCK TABLES, EXECUTE, REPLICATION SLAVE, REPLICATION CLIENT, CREATE VIEW, SHOW VIEW,
+              CREATE ROUTINE, ALTER ROUTINE, CREATE USER, EVENT, TRIGGER
               ON *.* TO 'homestead'@'%';
-            
+
             -- Change password
             ALTER USER 'homestead'@'%' IDENTIFIED BY '{sm_secrets["password"]}';
         """)

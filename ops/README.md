@@ -23,6 +23,8 @@ Manually create a Service-Linked Role for AutoScaling (or create an EC2 Auto Sca
 
 Manually create an IAM Role named "tf_iam_role" with EC2 Read-Only Access
 
+## Deployment
+
 Initialize the terraform cluster:
 
 ```bash
@@ -33,3 +35,18 @@ terraform apply
 
 Once the terraform cluster has been deployed, check the website to make sure it's up
 
+## Teardown
+
+To delete all AWS infrastructure, type this:
+
+```bash
+cd ops/terra
+terraform destroy
+```
+
+This does leave the manually configured resources lingering, though they do not cost money to persist.
+You will need to manually tear down the resources in the "Prerequisites" section.
+
+## Design
+
+The terraform template sets up 

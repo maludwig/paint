@@ -68,8 +68,50 @@ resource "aws_route_table_association" "b" {
   route_table_id = aws_route_table.r.id
 }
 
+# Bastion host security group to access
+# sebastion over SSH
+resource "aws_security_group" "tf_bastion_sg" {
+  name        = "tf_bastion_sg"
+  description = "Used in the terraform bastion host"
+  vpc_id      = aws_vpc.tf_vpc.id
+
+  # SSH access from anywhere
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # outbound internet access
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = merge(local.common_tags, map("Name","tf_bastion_sg"))
+}
+
+resource "aws_instance" "tf_sebastion" {
+  ami           = lookup(var.aws_amis, var.aws_region)
+  instance_type = "t2.micro"
+  iam_instance_profile = "tf_iam_role"
+  instance_initiated_shutdown_behavior = "stop"
+  root_block_device {
+    volume_size           = 8
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
+  vpc_security_group_ids = [aws_security_group.tf_bastion_sg.id]
+  subnet_id = aws_subnet.tf_subnet_a.id
+  tags = merge(local.common_tags, map("Name","tf_sebastion"))
+  user_data = base64encode(file("${path.module}/userdata_sebastion.sh"))
+  key_name = var.key_name
+}
+
 # Our default security group to access
-# the instances over SSH and HTTP
+# the webserver instances over SSH and HTTP
 resource "aws_security_group" "tf_webserver_sg" {
   name        = "tf_webserver_sg"
   description = "Used in the terraform webservers"
@@ -103,26 +145,26 @@ resource "aws_security_group" "tf_webserver_sg" {
 }
 
 # Our RDS security group to access
-# MySQL from the webservers
+# MySQL from the webservers and sebastion
 resource "aws_security_group" "tf_rds_sg" {
   name        = "tf_rds_sg"
   description = "Used in the terraform RDS instance"
   vpc_id      = aws_vpc.tf_vpc.id
 
-  # MySQL from the webservers
+  # MySQL from the webservers and sebastion
   ingress {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    security_groups = [aws_security_group.tf_webserver_sg.id]
+    security_groups = [aws_security_group.tf_webserver_sg.id, aws_security_group.tf_bastion_sg.id]
   }
 
-  # outbound internet access
+  # MySQL to the webservers and sebastion
   egress {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    security_groups = [aws_security_group.tf_webserver_sg.id]
+    security_groups = [aws_security_group.tf_webserver_sg.id, aws_security_group.tf_bastion_sg.id]
   }
   tags = merge(local.common_tags, map("Name","tf_rds_sg"))
 
@@ -132,7 +174,7 @@ resource "aws_security_group" "tf_rds_sg" {
 # the ELB over HTTP
 resource "aws_security_group" "tf_elb_sg" {
   name        = "tf_elb_sg"
-  description = "Used in the terraform"
+  description = "Used by the terraform ELB"
 
   vpc_id = aws_vpc.tf_vpc.id
 
@@ -249,7 +291,7 @@ resource "aws_launch_template" "tf_launch_template" {
 
   }
 
-  user_data = base64encode(file("${path.module}/userdata.sh"))
+  user_data = base64encode(file("${path.module}/userdata_web.sh"))
 }
 
 
@@ -350,7 +392,7 @@ resource "aws_route53_record" "tf_alb_dns_record" {
 
 resource "aws_route53_record" "tf_site_dns_record" {
   zone_id = var.zone_id
-  name = "${var.domain_name}"
+  name = var.domain_name
   alias {
     evaluate_target_health = false
     name = aws_lb.tf_alb.dns_name

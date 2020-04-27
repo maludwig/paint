@@ -81,18 +81,21 @@ function setup_app() {
   cd "$APP_DIR"
   git pull origin master
 
-  # Create python venv
-  python3 -m venv "$VENV_DIR"
-  source "$VENV_DIR/bin/activate"
-  pip install -r "$APP_DIR/ops/requirements.txt"
-  python "$APP_HOME/paint/ops/secrets.py" --template-env
-
   setup_node
   setup_php
 
   cd "$APP_DIR"
   npm install
   composer install
+
+  # Create python venv
+  python3 -m venv "$VENV_DIR"
+  source "$VENV_DIR/bin/activate"
+  pip install -r "$APP_DIR/ops/requirements.txt"
+
+  # Template secrets
+  python "$APP_HOME/paint/ops/secrets.py" --template-env
+  deactivate
 
   chown -R apache:apache "$APP_HOME"
   systemctl restart httpd
